@@ -16,9 +16,7 @@ public interface JobPostService {
 
     void delete(Long id);
 
-    List<JobPostResponse> getAll();
-
-    List<JobPostResponse> search(String searchParam);
+    List<JobPostResponse> getList(String searchQuery);
 
     JobPostDetail getDetail(Long id);
 }

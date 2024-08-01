@@ -11,6 +11,7 @@ import com.wanted.recruit.jobpost.dto.JobPostResponse;
 import com.wanted.recruit.jobpost.dto.JobPostUpdateRequest;
 import com.wanted.recruit.jobpost.repository.JobPostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobPostServiceImpl implements JobPostService {
     private final JobPostRepository jobPostRepository;
     private final CompanyRepository companyRepository;
@@ -47,26 +49,40 @@ public class JobPostServiceImpl implements JobPostService {
     @Override
     @Transactional
     public void delete(Long id) {
+        jobPostRepository.findById(id).orElseThrow(JobPostNotFoundException::new);
         jobPostRepository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobPostResponse> getAll() {
+    public List<JobPostResponse> getList(String searchQuery) {
+        // 검색어가 있으면
+        if(searchQuery != null && !searchQuery.isEmpty()) {
+            return search(searchQuery);
+        }
+
+        // 검색어 없으면 전체 목록 반환
+        return getAll();
+    }
+
+    @Transactional(readOnly = true)
+    private List<JobPostResponse> getAll() {
         return jobPostRepository.findAll().stream()
                 .map(JobPostResponse::new)
                 .collect(Collectors.toList());
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public List<JobPostResponse> search(String searchQuery) {
+    private List<JobPostResponse> search(String searchQuery) {
         return jobPostRepository.search(searchQuery);
     }
 
     @Override
     @Transactional(readOnly = true)
     public JobPostDetail getDetail(Long id) {
-        return jobPostRepository.getDetail(id);
+        JobPost jobPost = jobPostRepository.findById(id).orElseThrow(JobPostNotFoundException::new);
+        List<Long> otherJobPost = jobPostRepository.getOtherJobPost(jobPost.getCompany().getId(), jobPost.getId());
+
+        return new JobPostDetail(jobPost, otherJobPost);
     }
 }

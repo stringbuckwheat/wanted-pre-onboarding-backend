@@ -32,11 +32,7 @@ public class JobPostController {
 
     @GetMapping("/job")
     public ResponseEntity<List<JobPostResponse>> getAll(@RequestParam(value = "search", required = false) String searchQuery) {
-        if (searchQuery != null && !searchQuery.isEmpty()) {
-            return ResponseEntity.ok().body(jobPostService.search(searchQuery));
-        } else {
-            return ResponseEntity.ok().body(jobPostService.getAll());
-        }
+        return ResponseEntity.ok().body(jobPostService.getList(searchQuery));
     }
 
     @GetMapping("/job/{id}")
@@ -46,7 +42,7 @@ public class JobPostController {
 
     @DeleteMapping("/job/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
-        jobPostService.delete(id); // TODO 해당 채용정보 없을 시
+        jobPostService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

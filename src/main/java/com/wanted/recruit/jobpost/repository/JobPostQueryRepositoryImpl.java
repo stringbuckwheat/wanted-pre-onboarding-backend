@@ -1,9 +1,7 @@
 package com.wanted.recruit.jobpost.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.wanted.recruit.exception.JobPostNotFoundException;
 import com.wanted.recruit.jobpost.JobPost;
-import com.wanted.recruit.jobpost.dto.JobPostDetail;
 import com.wanted.recruit.jobpost.dto.JobPostResponse;
 import com.wanted.recruit.jobpost.dto.QJobPostResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,21 +33,14 @@ public class JobPostQueryRepositoryImpl implements JobPostQueryRepository {
                 .fetch();
     }
 
-    public JobPostDetail getDetail(Long id) {
-        JobPost jobPostDetail = queryFactory.selectFrom(jobPost).where(jobPost.id.eq(id)).fetchOne();
-
-        if(jobPostDetail == null) {
-            throw new JobPostNotFoundException();
-        }
-
-        List<Long> other = queryFactory.selectFrom(jobPost)
+    public List<Long> getOtherJobPost(Long companyId, Long jobPostId) {
+        return queryFactory
+                .select(jobPost.id)
+                .from(jobPost)
                 .where(
-                        jobPost.company.id.eq(jobPostDetail.getCompany().getId())
-                                .and(jobPost.id.ne(id))
+                        jobPost.company.id.eq(companyId)
+                                .and(jobPost.id.ne(jobPostId))
                 )
-                .fetch()
-                .stream().map(JobPost::getId).toList();
-
-        return new JobPostDetail(jobPostDetail, other);
+                .fetch();
     }
 }
