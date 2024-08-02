@@ -1,11 +1,13 @@
 package com.wanted.recruit.jobpost.dto;
 
 import com.wanted.recruit.common.Company;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 @Getter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CompanyResponse {
     private Long companyId;
     private String name;

@@ -3,15 +3,15 @@ package com.wanted.recruit.jobpost.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
 import com.wanted.recruit.jobpost.JobPost;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class JobPostResponse {
     private Long jobPostId;
     private String position; // 채용 포지션
