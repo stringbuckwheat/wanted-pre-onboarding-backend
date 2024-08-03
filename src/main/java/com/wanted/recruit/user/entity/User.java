@@ -1,11 +1,14 @@
-package com.wanted.recruit.common;
+package com.wanted.recruit.user.entity;
 
-import com.wanted.recruit.common.BaseEntity;
+import com.wanted.recruit.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 사용자 엔티티
+ */
 @Entity
 @Table(name = "user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

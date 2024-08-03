@@ -1,4 +1,4 @@
-package com.wanted.recruit.config;
+package com.wanted.recruit.common.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * QueryDsl 설정 클래스
+ */
 @Configuration
 @RequiredArgsConstructor
 public class QueryDslConfig {

@@ -2,25 +2,28 @@ package com.wanted.recruit.jobpost.dto;
 
 
 import com.querydsl.core.annotations.QueryProjection;
-import com.wanted.recruit.jobpost.JobPost;
+import com.wanted.recruit.jobpost.entity.JobPost;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * 채용 공고 생성 응답용 DTO
+ */
 @Getter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class JobPostResponse {
-    private Long jobPostId;
+    private Long jobPostId; // 채용 공고 id
     private String position; // 채용 포지션
     private int reward; // 채용 보상금
     private String content; // 채용 내용
     private String techStack; // 사용 기술
-    private LocalDateTime createDate;
-    private LocalDateTime updateDate;
-    private CompanyResponse company;
+    private LocalDateTime createDate; // 생성일
+    private LocalDateTime updateDate; // 수정일
+    private CompanyResponse company; // 채용 공고를 작성한 회사
 
     @QueryProjection
     public JobPostResponse(JobPost jobPost) {

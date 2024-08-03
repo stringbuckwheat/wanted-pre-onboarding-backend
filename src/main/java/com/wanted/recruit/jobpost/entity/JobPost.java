@@ -1,7 +1,7 @@
-package com.wanted.recruit.jobpost;
+package com.wanted.recruit.jobpost.entity;
 
-import com.wanted.recruit.common.BaseEntity;
-import com.wanted.recruit.common.Company;
+import com.wanted.recruit.common.entity.BaseEntity;
+import com.wanted.recruit.company.entity.Company;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+/**
+ * 채용 공고 엔티티
+ */
 @Entity
 @Table(name = "job_post")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

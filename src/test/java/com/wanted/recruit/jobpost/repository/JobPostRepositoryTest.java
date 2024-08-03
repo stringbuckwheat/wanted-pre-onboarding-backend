@@ -1,9 +1,9 @@
 package com.wanted.recruit.jobpost.repository;
 
-import com.wanted.recruit.config.JpaConfig;
-import com.wanted.recruit.config.QueryDslConfig;
-import com.wanted.recruit.jobpost.JobPost;
-import com.wanted.recruit.common.Company;
+import com.wanted.recruit.common.config.JpaConfig;
+import com.wanted.recruit.common.config.QueryDslConfig;
+import com.wanted.recruit.jobpost.entity.JobPost;
+import com.wanted.recruit.company.entity.Company;
 import com.wanted.recruit.jobpost.dto.JobPostResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({QueryDslConfig.class, JpaConfig.class})
+@DisplayName("JobPostRepository 테스트")
 class JobPostRepositoryTest {
 
     @Autowired
@@ -38,14 +39,18 @@ class JobPostRepositoryTest {
     private TestEntityManager entityManager;
 
     private Company company;
-    private JobPost jobPost;
+    private JobPost wantedJobPost;
 
+    /**
+     * company -> persistence
+     * jobPost -> transient
+     */
     @BeforeEach
     void setUp() {
         company = Company.builder().name("원티드").nation("한국").region("서울").build();
         entityManager.persist(company);
 
-        jobPost = JobPost.builder()
+        wantedJobPost = JobPost.builder()
                 .position("신입 백엔드 개발자")
                 .reward(500000)
                 .techStack("Java/Spring")
@@ -56,19 +61,22 @@ class JobPostRepositoryTest {
 
 
     @Test
-    @DisplayName("JobPost 저장 테스트")
+    @DisplayName("JobPost 저장: 성공 시나리오")
     void save_whenValid_ShouldSaveJobPost() {
-        JobPost savedJobPost = jobPostRepository.save(jobPost);
+        JobPost savedJobPost = jobPostRepository.save(wantedJobPost);
 
-        assertThat(savedJobPost.getId()).isNotNull();
-        assertThat(savedJobPost.getCompany().getName()).isEqualTo("원티드");
+        assertThat(savedJobPost.getId()).isNotNull(); // PK 생성 여부 확인
+        assertThat(savedJobPost.getCompany().getName()).isEqualTo("원티드"); // 필드 확인
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidJobPostProvider.class)
-    @DisplayName("JobPost 저장 실패: 빈 필드")
-    void save_WhenEmptyField_ShouldThrowConstraintViolationException(JobPost.JobPostBuilder invalidJobPost) {
-        assertThatThrownBy(() -> jobPostRepository.save(invalidJobPost.company(company).build()))
+    @DisplayName("JobPost 저장 실패: 제약조건을 준수하지 못한 필드")
+    void save_WhenEmptyField_ShouldThrowConstraintViolationException(JobPost.JobPostBuilder invalidJobPostBuilder) {
+        // 불충분한 필드의 Builder를 영속화된 Company 엔티티와 함께 Build
+        JobPost invalidJobPost = invalidJobPostBuilder.company(company).build();
+
+        assertThatThrownBy(() -> jobPostRepository.save(invalidJobPost))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -80,7 +88,7 @@ class JobPostRepositoryTest {
                 .reward(500000)
                 .techStack("Java/Spring")
                 .content("공고 상세 내용")
-                .company(null)
+                .company(null) // 회사 정보 없음
                 .build();
 
         assertThatThrownBy(() -> jobPostRepository.save(invalidJobPost))
@@ -89,37 +97,37 @@ class JobPostRepositoryTest {
 
 
     @Test
-    @DisplayName("JobPost 단일 조회 테스트")
+    @DisplayName("JobPost 단일 조회: 성공 시나리오")
     void findById_WhenValid_ShouldReturnJobPost() {
-        entityManager.persist(jobPost);
+        entityManager.persist(wantedJobPost);
 
-        Optional<JobPost> foundJobPost = jobPostRepository.findById(jobPost.getId());
+        // 방금 저장한 JobPost 엔티티를 조회
+        Optional<JobPost> foundJobPost = jobPostRepository.findById(wantedJobPost.getId());
 
-        assertThat(foundJobPost).isPresent();
-        assertThat(foundJobPost.get().getPosition()).isEqualTo("신입 백엔드 개발자");
+        assertThat(foundJobPost).isPresent(); // 존재 여부
+        assertThat(foundJobPost.get().getPosition()).isEqualTo("신입 백엔드 개발자"); // 필드 확인
     }
 
     @Test
-    @DisplayName("JobPost 단일 조회 테스트: 실패")
+    @DisplayName("JobPost 단일 조회: 해당 엔티티 없음")
     void findById_WhenNotFound_ShouldReturnJobPost() {
         Optional<JobPost> foundJobPost = jobPostRepository.findById(1328659832L);
-
         assertThat(foundJobPost).isEmpty();
     }
 
     @Test
-    @DisplayName("JobPost 삭제 테스트")
+    @DisplayName("JobPost 삭제")
     void testDeleteById() {
-        entityManager.persist(jobPost);
+        entityManager.persist(wantedJobPost);
 
-        jobPostRepository.deleteById(jobPost.getId());
+        jobPostRepository.deleteById(wantedJobPost.getId());
 
-        Optional<JobPost> deletedJobPost = jobPostRepository.findById(jobPost.getId());
+        Optional<JobPost> deletedJobPost = jobPostRepository.findById(wantedJobPost.getId());
         assertThat(deletedJobPost).isEmpty();
     }
 
     @Test
-    @DisplayName("JobPost 전체 조회 테스트")
+    @DisplayName("JobPost 전체 조회: 성공 시나리오")
     void findAll_WhenValid_ShouldReturnJobPostList() {
         Company naver = new Company("네이버", "한국", "판교");
         entityManager.persist(naver);
@@ -132,8 +140,8 @@ class JobPostRepositoryTest {
                 .company(naver)
                 .build();
 
-        entityManager.persist(jobPost);
-        entityManager.persist(jobPostByNaver);
+        entityManager.persist(wantedJobPost); // 원티드 공고 저장
+        entityManager.persist(jobPostByNaver); // 네이버 공고 저장
 
         List<JobPost> jobPosts = jobPostRepository.findAll();
 
@@ -141,6 +149,9 @@ class JobPostRepositoryTest {
         assertThat(jobPosts).extracting(JobPost::getPosition).containsExactlyInAnyOrder("신입 프론트엔드 개발자", "신입 백엔드 개발자");
     }
 
+    /**
+     * 검색 테스트용 데이터를 persist하는 메소드
+     */
     private void jobPostSetUpForSearch() {
         JobPost.JobPostBuilder base = JobPost.builder().reward(30 * 100000);
 
@@ -159,6 +170,10 @@ class JobPostRepositoryTest {
         jobPosts.stream().forEach(jobPost -> entityManager.persist(jobPost));
     }
 
+    /**
+     * 검색 테스트를 위한 테스트 데이터 제공 메소드
+     * @return 검색어, 예상 결과의 개수
+     */
     static Stream<Arguments> provideSearchQueryAndResultSize() {
         return Stream.of(
                 // position 검색
@@ -192,20 +207,27 @@ class JobPostRepositoryTest {
 
     @ParameterizedTest
     @MethodSource("provideSearchQueryAndResultSize")
-    @DisplayName("search 메서드 테스트")
+    @DisplayName("JobPost 검색")
     void search(String searchQuery, int size) {
-        jobPostSetUpForSearch();
+        jobPostSetUpForSearch(); // 테스트데이터 영속화
+
         List<JobPostResponse> searchResults = jobPostRepository.search(searchQuery);
         assertThat(searchResults).hasSize(size);
     }
 
     @Test
-    @DisplayName("getOtherJobPost 메서드 테스트")
+    @DisplayName("회사가 올린 다른 채용공고")
     void testGetOtherJobPost() {
-        JobPost wantedJobPost = JobPost.builder()
+        JobPost wantedJobPost2 = JobPost.builder()
                 .position("신입 프론트엔드 개발자")
-                .reward(50 * 100000)
                 .techStack("React")
+                .content("공고 상세 내용")
+                .company(company)
+                .build();
+
+        JobPost wantedJobPost3 = JobPost.builder()
+                .position("경력 백엔드 개발자")
+                .techStack("Spring")
                 .content("공고 상세 내용")
                 .company(company)
                 .build();
@@ -214,19 +236,26 @@ class JobPostRepositoryTest {
         Company naver = entityManager.persist(new Company("네이버", "한국", "판교"));
         JobPost naverJobPost = JobPost.builder()
                 .position("신입 프론트엔드 개발자")
-                .reward(50 * 100000)
                 .techStack("React")
                 .content("공고 상세 내용")
                 .company(naver)
                 .build();
 
-        entityManager.persist(jobPost); // 원티드
-        entityManager.persist(wantedJobPost); // 원티드
-        entityManager.persist(naverJobPost); // 네이버
+        entityManager.persist(wantedJobPost); // 원티드 -> 현재 조회한 공고
+        entityManager.persist(wantedJobPost2); // 원티드 -> 회사가올린다른채용공고에 포함되어야 함
+        entityManager.persist(wantedJobPost3); // 원티드 -> 회사가올린다른채용공고에 포함되어야 함
+        entityManager.persist(naverJobPost); // 네이버 -> 포함X
 
-        List<Long> otherJobPostIds = jobPostRepository.getOtherJobPost(company.getId(), jobPost.getId());
+        List<Long> otherJobPostIds = jobPostRepository.getOtherJobPost(company.getId(), wantedJobPost.getId());
 
-        assertThat(otherJobPostIds).hasSize(1);
-        assertThat(otherJobPostIds.get(0)).isEqualTo(wantedJobPost.getId());
+        assertThat(otherJobPostIds).hasSize(2);
+
+        // 포함 되어야 할 데이터들
+        assertThat(otherJobPostIds).contains(wantedJobPost2.getId());
+        assertThat(otherJobPostIds).contains(wantedJobPost3.getId());
+
+        // 포함되지 말아야할 데이터
+        assertThat(otherJobPostIds).doesNotContain(naverJobPost.getId());
+        assertThat(otherJobPostIds).doesNotContain(wantedJobPost.getId());
     }
 }

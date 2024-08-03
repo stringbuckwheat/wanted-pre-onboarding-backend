@@ -1,9 +1,9 @@
 package com.wanted.recruit.jobpost.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanted.recruit.common.Company;
-import com.wanted.recruit.exception.JobPostNotFoundException;
-import com.wanted.recruit.jobpost.JobPost;
+import com.wanted.recruit.company.entity.Company;
+import com.wanted.recruit.common.exception.exception.JobPostNotFoundException;
+import com.wanted.recruit.jobpost.entity.JobPost;
 import com.wanted.recruit.jobpost.dto.*;
 import com.wanted.recruit.jobpost.service.JobPostService;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(JobPostController.class)
+@DisplayName("JobPostController 테스트")
 class JobPostControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -87,46 +88,46 @@ class JobPostControllerTest {
     }
 
     @Test
-    @DisplayName("모든 값이 유효한 경우, 채용공고 저장(201)")
+    @DisplayName("채용 공고 저장: 성공 시나리오(201)")
     void save_WhenValid_ShouldReturnSavedJobPostWith201() throws Exception {
         when(jobPostService.save(any(JobPostRequest.class))).thenReturn(jobPostResponse);
 
         mockMvc.perform(post("/job")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(jobPostRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.jobPostId").value(jobPostResponse.getJobPostId()))
+                .andExpect(status().isCreated()) // 상태코드 확인
+                .andExpect(jsonPath("$.jobPostId").value(jobPostResponse.getJobPostId())) // 필드값 검증
                 .andExpect(jsonPath("$.position").value(jobPostResponse.getPosition()));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidJobPostRequestProvider.class)
-    @DisplayName("요청 데이터가 불충분한 경우, MethodArgumentNotValidException(400)")
+    @DisplayName("채용 공고 저장: 요청 데이터가 불충분한 경우, MethodArgumentNotValidException(400)")
     void save_WhenRequestDataInvalid_ShouldThrowMethodArgumentNotValidExceptionWith400(JobPostRequest invalidRequest) throws Exception {
         mockMvc.perform(post("/job")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("MethodArgumentNotValidException"));
+                .andExpect(status().isBadRequest()) // 상태 코드 확인
+                .andExpect(jsonPath("$.title").value("MethodArgumentNotValidException")); // 필드값 검증
         ;
     }
 
     @Test
-    @DisplayName("모든 데이터가 유효한 경우, 공고 수정")
+    @DisplayName("채용 공고 수정: 성공 시나리오(200)")
     void update_whenAllValid_ShouldReturnUpdatedJobPost() throws Exception {
         when(jobPostService.update(any(JobPostUpdateRequest.class), anyLong())).thenReturn(jobPostResponse);
 
         mockMvc.perform(put("/job/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(jobPostUpdateRequest)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk()) // 상태코드
                 .andExpect(jsonPath("$.jobPostId").value(jobPostResponse.getJobPostId()))
                 .andExpect(jsonPath("$.position").value(jobPostResponse.getPosition()));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidJobPostUpdateRequestProvider.class)
-    @DisplayName("요청 데이터가 불충분한 경우, MethodArgumentNotValidException(400)")
+    @DisplayName("채용 공고 수정: 요청 데이터가 불충분한 경우, MethodArgumentNotValidException(400)")
     void update_WhenRequestDataInvalid_ShouldThrowMethodArgumentNotValidExceptionWith400(JobPostUpdateRequest invalidRequest) throws Exception {
         mockMvc.perform(put("/job/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,24 +137,26 @@ class JobPostControllerTest {
     }
 
     @Test
-    @DisplayName("공고 정보를 찾을 수 없는 경우, JobPostNotFoundException(404)")
+    @DisplayName("채용 공고 수정: 공고 정보를 찾을 수 없는 경우, JobPostNotFoundException(404)")
     void update_WhenJobPostNotFound_ThrowJobPostNotFoundExceptionWith404() throws Exception {
-        Long nonExistJobPostId = 23947123L;
+        Long nonExistJobPostId = 23947123L; // 존재하지 않는 공고 id
 
+        // JobPostNotFoundException 발생시킴
         when(jobPostService.update(any(JobPostUpdateRequest.class), eq(nonExistJobPostId)))
                 .thenThrow(new JobPostNotFoundException());
 
         mockMvc.perform(put("/job/" + nonExistJobPostId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(jobPostUpdateRequest)))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isNotFound()) // 상태 코드 반환
                 .andExpect(jsonPath("$.title").value("JobPostNotFoundException"));
     }
 
     @Test
-    @DisplayName("검색어가 없는 경우, 전체 공고 반환")
+    @DisplayName("채용 공고 목록: 검색어가 없는 경우, 전체 공고 반환")
     void getList_WhenNoSearchQuery_ShouldReturnEntireList() throws Exception {
-        when(jobPostService.getList(null)).thenReturn(List.of(jobPostResponse));
+        String searchQuery = null; // 검색어 없음
+        when(jobPostService.getList(searchQuery)).thenReturn(List.of(jobPostResponse));
 
         mockMvc.perform(get("/job"))
                 .andExpect(status().isOk())
@@ -162,18 +165,20 @@ class JobPostControllerTest {
     }
 
     @Test
-    @DisplayName("검색어가 있는 경우, 검색된 공고 반환")
+    @DisplayName("채용 공고 목록: 검색어가 있는 경우, 검색된 공고 반환")
     void getList_WhenHasSearchQuery_ShouldReturnSearchedList() throws Exception {
-        when(jobPostService.getList("검색어")).thenReturn(List.of(jobPostResponse));
+        String searchQuery = "검색어"; // 검색어 있음!
 
-        mockMvc.perform(get("/job?search=검색어"))
+        when(jobPostService.getList(searchQuery)).thenReturn(List.of(jobPostResponse));
+
+        mockMvc.perform(get("/job?search=" + searchQuery)) // request param
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].jobPostId").value(jobPostResponse.getJobPostId()))
                 .andExpect(jsonPath("$[0].position").value(jobPostResponse.getPosition()));
     }
 
     @Test
-    @DisplayName("JobPostId가 유효한 경우, 상세 정보를 반환")
+    @DisplayName("채용 공고 상세: JobPostId가 유효한 경우, 상세 정보를 반환")
     void getDetail_WhenAllValid_ShouldReturnJobPostDetail() throws Exception {
         when(jobPostService.getDetail(anyLong())).thenReturn(jobPostDetail);
 
@@ -183,7 +188,7 @@ class JobPostControllerTest {
     }
 
     @Test
-    @DisplayName("JobPost가 없는 경우, JobPostNotFoundException(404)")
+    @DisplayName("채용 공고 상세: 해당 JobPost가 없는 경우, JobPostNotFoundException(404)")
     void getDetail_WhenJobPostNotFound_ThrowJobPostNotFoundExceptionWith404() throws Exception {
         when(jobPostService.getDetail(anyLong())).thenThrow(new JobPostNotFoundException());
 

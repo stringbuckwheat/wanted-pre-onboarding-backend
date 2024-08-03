@@ -1,12 +1,15 @@
 package com.wanted.recruit.jobpost.dto;
 
-import com.wanted.recruit.common.Company;
-import com.wanted.recruit.jobpost.JobPost;
+import com.wanted.recruit.company.entity.Company;
+import com.wanted.recruit.jobpost.entity.JobPost;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+/**
+ * 채용 공고 생성 요청용 DTO
+ */
 @Getter
 @Builder // 테스트용
 @NoArgsConstructor
@@ -14,7 +17,7 @@ import lombok.*;
 @ToString
 public class JobPostRequest {
     @NotNull(message = "회사 정보를 입력해주세요.")
-    private Long companyId;
+    private Long companyId; // 회사 id
 
     @NotBlank(message = "채용 포지션을 입력해주세요.")
     private String position; // 채용 포지션

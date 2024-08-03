@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+/**
+ * 채용 공고 수정 요청용 DTO
+ */
 @Getter
 @Builder // 테스트용
 @NoArgsConstructor
