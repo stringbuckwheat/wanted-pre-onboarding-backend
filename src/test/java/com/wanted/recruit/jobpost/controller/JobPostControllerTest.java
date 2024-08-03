@@ -88,7 +88,7 @@ class JobPostControllerTest {
 
     @Test
     @DisplayName("모든 값이 유효한 경우, 채용공고 저장(201)")
-    void save_WhenValid_ShouldReturnSavedJobPostWith204() throws Exception {
+    void save_WhenValid_ShouldReturnSavedJobPostWith201() throws Exception {
         when(jobPostService.save(any(JobPostRequest.class))).thenReturn(jobPostResponse);
 
         mockMvc.perform(post("/job")
