@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +42,8 @@ class JobPostRepositoryTest {
     private Company company;
     private JobPost wantedJobPost;
 
+    private static final String TEST_PREFIX = UUID.randomUUID().toString() + "_";
+
     /**
      * company -> persistence
      * jobPost -> transient
@@ -57,6 +60,8 @@ class JobPostRepositoryTest {
                 .content("공고 상세 내용")
                 .company(company)
                 .build();
+
+        JobPostTestHelper.setUpJobPostTestData(TEST_PREFIX, entityManager);
     }
 
 
@@ -129,6 +134,8 @@ class JobPostRepositoryTest {
     @Test
     @DisplayName("JobPost 전체 조회: 성공 시나리오")
     void findAll_WhenValid_ShouldReturnJobPostList() {
+        int prevSize = jobPostRepository.findAll().size();
+
         Company naver = new Company("네이버", "한국", "판교");
         entityManager.persist(naver);
 
@@ -145,33 +152,12 @@ class JobPostRepositoryTest {
 
         List<JobPost> jobPosts = jobPostRepository.findAll();
 
-        assertThat(jobPosts).hasSize(2);
-        assertThat(jobPosts).extracting(JobPost::getPosition).containsExactlyInAnyOrder("신입 프론트엔드 개발자", "신입 백엔드 개발자");
+        assertThat(jobPosts).hasSize(prevSize + 2);
     }
 
     /**
-     * 검색 테스트용 데이터를 persist하는 메소드
-     */
-    private void jobPostSetUpForSearch() {
-        JobPost.JobPostBuilder base = JobPost.builder().reward(30 * 100000);
-
-        Company naver = entityManager.persist(new Company("네이버", "한국", "판교"));
-        Company nintendo = entityManager.persist(new Company("닌텐도", "일본", "교토"));
-
-        List<JobPost> jobPosts = List.of(
-                base.position("신입 백엔드 개발자").techStack("Java").content("신입 개발자 모집").company(company).build(),
-                base.position("경력 백엔드 개발자").techStack("TypeScript").content("경력 2년 이상").company(naver).build(),
-                base.position("백엔드 개발자").techStack("Python/Django, Java/Spring").content("경력 우대").company(nintendo).build(),
-                base.position("신입 프론트엔드 개발자").techStack("React").content("채용 공고 내용").company(company).build(),
-                base.position("경력 프론트엔드 개발자").techStack("Angular").content("백엔드와 협업...중략").company(naver).build(),
-                base.position("프론트엔드 개발자").techStack("Vue.js, React.js").content("채용 공고 내용").company(company).build()
-        );
-
-        jobPosts.stream().forEach(jobPost -> entityManager.persist(jobPost));
-    }
-
-    /**
-     * 검색 테스트를 위한 테스트 데이터 제공 메소드
+     * 검색 테스트를 위한 테스트 Argument 제공 메소드
+     *
      * @return 검색어, 예상 결과의 개수
      */
     static Stream<Arguments> provideSearchQueryAndResultSize() {
@@ -209,9 +195,7 @@ class JobPostRepositoryTest {
     @MethodSource("provideSearchQueryAndResultSize")
     @DisplayName("JobPost 검색")
     void search(String searchQuery, int size) {
-        jobPostSetUpForSearch(); // 테스트데이터 영속화
-
-        List<JobPostResponse> searchResults = jobPostRepository.search(searchQuery);
+        List<JobPostResponse> searchResults = jobPostRepository.search(TEST_PREFIX + searchQuery);
         assertThat(searchResults).hasSize(size);
     }
 
