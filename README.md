@@ -83,12 +83,12 @@
   * 이외 읽기 전용 메소드에도 동일하게 적용
 
 ### 채용공고 검색
-* **QueryDsl**과 **DTO Projection**을 사용하여 응답 DTO 객체로 바로 매핑 → 성능 최적화, 효율성 향상
+* **QueryDsl**과 `DTO Projection`을 사용하여 응답 DTO 객체로 바로 매핑 → 성능 최적화, 효율성 향상
 * 검색어가 null이거나 비어 있는 경우 전체 목록을 반환하여 빈 검색어 입력 시에도 적절한 결과 반환
 
 ### 채용공고 상세
 * 채용공고 상세 응답용 DTO가 기본 채용 공고 정보 응답용 DTO를 상속받아 코드 중복 줄임
-* **이 회사의 다른 채용공고** 기능 구현 
+* `이 회사의 다른 채용공고` 기능 구현 
   * QueryDsl을 사용하여, **요청된 채용공고를 제외한 동일 회사의 다른 채용공고만** 포함하도록 구현
 
 ### 채용공고 등록
@@ -104,22 +104,22 @@
 
 ### 채용공고 지원
 * `existsByUserIdAndJobPostId` 메소드로 이미 지원한 기록이 있는지 확인, 중복 지원 시 예외를 던짐
-* Apply 엔티티 **Unique 제약 조건** 설정
-  * 중복 지원을 데이터베이스 레벨에서 한 번 더 방지
+  * Apply 엔티티 `Unique 제약 조건` 설정
+    * 중복 지원을 데이터베이스 레벨에서 한 번 더 방지
 
 ### ETC
 * Repository를 implements 하여 필요한 메소드만 정의 
 * 단방향 매핑에서 데이터 무결성을 유지하기 위해 `@OnDelete(action = OnDeleteAction.CASCADE)`를 활용하여 연관된 엔티티가 자동으로 삭제되도록 구현
 
 ## 예외처리
-* AlreadyAppliedException, CompanyNotFoundException 등 다양한 Custom Exception으로 예외 처리 세분화 
-* @RestControllerAdvice를 사용한 전역적 예외처리 
+* AlreadyAppliedException, CompanyNotFoundException 등 다양한 `Custom Exception`으로 예외 처리 세분화 
+* `@RestControllerAdvice`를 사용한 전역적 예외처리 
 
 ## 유닛 테스트
-* 70개의 유닛테스트로 높은 테스트 커버리지 확보
+* `70개의 유닛테스트`로 높은 테스트 커버리지 확보
   * 모든 주요 기능의 성공 시나리오와 예외 상황을 모두 테스트
   * 다양한 유효성 검사 및 예외 상황을 테스트하여 시스템의 예외 처리 로직이 정확히 동작하는지 확인
-* 컨트롤러, 서비스, 리파지토리 등 모든 레이어에 대한 유닛 테스트 구현
+* 컨트롤러, 서비스, 리파지토리 등 `모든 레이어`에 대한 유닛 테스트 구현
   * Controller: MockMvc를 활용하여 HTTP 요청/응답 시뮬레이션 및 요청 DTO Validation 검사
   * Service: Mockito를 이용해 비즈니스 로직의 독립적 테스트 진행
   * Repository: @DataJpaTest를 통해 DB와의 상호작용 및 쿼리 실행 결과의 정확성 확인, Entity Validation 검사
