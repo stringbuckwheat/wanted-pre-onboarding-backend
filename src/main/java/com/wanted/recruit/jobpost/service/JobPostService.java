@@ -14,6 +14,28 @@ import java.util.List;
  */
 public interface JobPostService {
     /**
+     * 전체 채용 공고 리스트
+     * @return 전체 채용 공고 리스트
+     */
+    List<JobPostResponse> getAll();
+
+    /**
+     * 검색된 채용 공고 리스트
+     * @param searchQuery 검색어
+     * @return 검색된 채용 공고 리스트
+     */
+    List<JobPostResponse> search(String searchQuery);
+
+    /**
+     * 채용 공고의 세부 정보
+     *
+     * @param id 조회할 채용 공고의 ID
+     * @return 채용 공고의 세부 정보
+     * @throws JobPostNotFoundException 해당 채용 공고가 존재하지 않는 경우
+     */
+    JobPostDetail getDetail(Long id);
+
+    /**
      * 새로운 채용 공고 저장
      *
      * @param request 저장할 채용 공고의 요청 데이터
@@ -39,21 +61,4 @@ public interface JobPostService {
      * @throws JobPostNotFoundException 해당 채용 공고가 존재하지 않는 경우
      */
     void delete(Long id);
-
-    /**
-     * 검색어가 있으면 검색된 리스트를, 검색어가 없으면 전체 리스트를 반환
-     *
-     * @param searchQuery (Optional) 검색어
-     * @return 검색어를 포함하는 리스트 or 전체 채용 공고 리스트
-     */
-    List<JobPostResponse> getList(String searchQuery);
-
-    /**
-     * 채용 공고의 세부 정보
-     *
-     * @param id 조회할 채용 공고의 ID
-     * @return 채용 공고의 세부 정보
-     * @throws JobPostNotFoundException 해당 채용 공고가 존재하지 않는 경우
-     */
-    JobPostDetail getDetail(Long id);
 }

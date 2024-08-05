@@ -1,6 +1,7 @@
 package com.wanted.recruit.jobpost.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanted.recruit.common.exception.exception.InvalidSearchQueryException;
 import com.wanted.recruit.company.entity.Company;
 import com.wanted.recruit.common.exception.exception.JobPostNotFoundException;
 import com.wanted.recruit.jobpost.entity.JobPost;
@@ -139,13 +140,11 @@ class JobPostControllerTest {
     @Test
     @DisplayName("채용 공고 수정: 공고 정보를 찾을 수 없는 경우, JobPostNotFoundException(404)")
     void update_WhenJobPostNotFound_ThrowJobPostNotFoundExceptionWith404() throws Exception {
-        Long nonExistJobPostId = 23947123L; // 존재하지 않는 공고 id
-
         // JobPostNotFoundException 발생시킴
-        when(jobPostService.update(any(JobPostUpdateRequest.class), eq(nonExistJobPostId)))
+        when(jobPostService.update(any(JobPostUpdateRequest.class), anyLong()))
                 .thenThrow(new JobPostNotFoundException());
 
-        mockMvc.perform(put("/job/" + nonExistJobPostId)
+        mockMvc.perform(put("/job/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(jobPostUpdateRequest)))
                 .andExpect(status().isNotFound()) // 상태 코드 반환
@@ -156,7 +155,7 @@ class JobPostControllerTest {
     @DisplayName("채용 공고 목록: 검색어가 없는 경우, 전체 공고 반환")
     void getList_WhenNoSearchQuery_ShouldReturnEntireList() throws Exception {
         String searchQuery = null; // 검색어 없음
-        when(jobPostService.getList(searchQuery)).thenReturn(List.of(jobPostResponse));
+        when(jobPostService.getAll()).thenReturn(List.of(jobPostResponse));
 
         mockMvc.perform(get("/job"))
                 .andExpect(status().isOk())
@@ -169,12 +168,24 @@ class JobPostControllerTest {
     void getList_WhenHasSearchQuery_ShouldReturnSearchedList() throws Exception {
         String searchQuery = "검색어"; // 검색어 있음!
 
-        when(jobPostService.getList(searchQuery)).thenReturn(List.of(jobPostResponse));
+        when(jobPostService.search(searchQuery)).thenReturn(List.of(jobPostResponse));
 
         mockMvc.perform(get("/job?search=" + searchQuery)) // request param
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].jobPostId").value(jobPostResponse.getJobPostId()))
                 .andExpect(jsonPath("$[0].position").value(jobPostResponse.getPosition()));
+    }
+
+    @Test
+    @DisplayName("채용 공고 목록: 검색어가 유효성 검사를 통과하지 못하는 경우")
+    void getList_WhenInvalidSearchQuery_ShouldThrowInvalidSearchQueryException() throws Exception {
+        String searchQuery = "원티드$"; // 검색어 유효성 검사 통과 X
+
+        when(jobPostService.search(searchQuery)).thenThrow(InvalidSearchQueryException.class);
+
+        mockMvc.perform(get("/job?search=" + searchQuery)) // request param
+                .andExpect(status().isBadRequest()) // 상태 코드 반환
+                .andExpect(jsonPath("$.title").value("InvalidSearchQueryException"));
     }
 
     @Test

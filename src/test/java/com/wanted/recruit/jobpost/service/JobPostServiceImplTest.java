@@ -1,5 +1,6 @@
 package com.wanted.recruit.jobpost.service;
 
+import com.wanted.recruit.common.exception.exception.InvalidSearchQueryException;
 import com.wanted.recruit.company.entity.Company;
 import com.wanted.recruit.company.repository.CompanyRepository;
 import com.wanted.recruit.common.exception.exception.CompanyNotFoundException;
@@ -130,11 +131,11 @@ class JobPostServiceImplTest {
     @DisplayName("채용 공고 삭제: 성공 시나리오")
     void delete_WhenAllValid_ReturnNoContent() {
         // 해당 공고 정보 존재
-        when(jobPostRepository.findById(1L)).thenReturn(Optional.of(jobPost));
+        when(jobPostRepository.existsById(1L)).thenReturn(true);
 
         jobPostService.delete(1L);
 
-        verify(jobPostRepository, times(1)).findById(1L);
+        verify(jobPostRepository, times(1)).existsById(1L);
         verify(jobPostRepository, times(1)).deleteById(1L);
     }
 
@@ -142,10 +143,10 @@ class JobPostServiceImplTest {
     @DisplayName("채용 공고 삭제: 공고 정보를 찾을 수 없는 경우, JobPostNotFoundException")
     void delete_WhenJobPostNotFound_ThrowJobPostNotFoundException() {
         // 해당 공고 정보 없음
-        when(jobPostRepository.findById(1L)).thenReturn(Optional.empty());
+        when(jobPostRepository.existsById(1L)).thenReturn(false);
 
         assertThrows(JobPostNotFoundException.class, () -> jobPostService.delete(1L));
-        verify(jobPostRepository, times(1)).findById(1L);
+        verify(jobPostRepository, times(1)).existsById(1L);
         verify(jobPostRepository, times(0)).deleteById(1L);
     }
 
@@ -155,7 +156,7 @@ class JobPostServiceImplTest {
         String searchQuery = null; // 검색어 없음
         when(jobPostRepository.findAll()).thenReturn(Arrays.asList(jobPost));
 
-        List<JobPostResponse> responses = jobPostService.getList(searchQuery);
+        List<JobPostResponse> responses = jobPostService.getAll();
 
         assertNotNull(responses);
         assertEquals(1, responses.size());
@@ -171,11 +172,19 @@ class JobPostServiceImplTest {
 
         when(jobPostRepository.search(searchQuery)).thenReturn(Arrays.asList(searchedJob));
 
-        List<JobPostResponse> responses = jobPostService.getList(searchQuery);
+        List<JobPostResponse> responses = jobPostService.search(searchQuery);
 
         assertNotNull(responses);
         assertEquals(1, responses.size());
         verify(jobPostRepository, times(1)).search(searchQuery);
+    }
+
+    @Test
+    @DisplayName("채용 공고 목록: 검색어 유효성 검사 통과 못하는 경우, InvalidSearchQueryException")
+    void getList_WhenInvalidSearchQuery_ShouldThrowInvalidSearchQueryException() {
+        String searchQuery = "$원티드"; // 검색어 유효성 검사 통과 X
+        assertThrows(InvalidSearchQueryException.class, () -> jobPostService.search(searchQuery));
+        verify(jobPostRepository, times(0)).search(searchQuery);
     }
 
     @Test

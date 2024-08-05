@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface JobPostRepository extends Repository<JobPost, Long>, JobPostQueryRepository {
     JobPost save(JobPost jobPost);
 
+    boolean existsById(Long id);
+
     Optional<JobPost> findById(Long id);
 
     void deleteById(Long id);

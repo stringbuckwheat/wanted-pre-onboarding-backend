@@ -27,6 +27,35 @@ public class JobPostController {
     private final JobPostService jobPostService;
 
     /**
+     * 채용 공고 목록 조회
+     *
+     * @param searchQuery (optional) 채용 공고 필터링 조건
+     * @return 채용 공고 목록
+     */
+    @GetMapping("/job")
+    public ResponseEntity<List<JobPostResponse>> getAll(@RequestParam(value = "search", required = false) String searchQuery) {
+        // 검색어가 있으면
+        if(searchQuery != null && !searchQuery.trim().isEmpty()) {
+            return ResponseEntity.ok().body(jobPostService.search(searchQuery));
+        }
+
+        // 검색어 없으면 전체 목록 반환
+        return ResponseEntity.ok().body(jobPostService.getAll());
+    }
+
+    /**
+     * 특정 채용 공고의 세부 정보 조회
+     *
+     * @param id 조회할 채용 공고 Id
+     * @return 채용 공고 세부정보
+     * @throws JobPostNotFoundException 해당 지원 공고가 존재하지 않는 경우(NOT_FOUND)
+     */
+    @GetMapping("/job/{id}")
+    public ResponseEntity<JobPostDetail> getDetail(@PathVariable("id") Long id) {
+        return ResponseEntity.ok().body(jobPostService.getDetail(id));
+    }
+
+    /**
      * 새로운 채용 공고 저장
      *
      * @param request 저장할 채용 공고의 요청 데이터
@@ -51,29 +80,6 @@ public class JobPostController {
     @PutMapping("/job/{id}")
     public ResponseEntity<JobPostResponse> update(@RequestBody @Valid JobPostUpdateRequest request, @PathVariable("id") Long id) {
         return ResponseEntity.ok().body(jobPostService.update(request, id));
-    }
-
-    /**
-     * 채용 공고 목록 조회
-     *
-     * @param searchQuery (optional) 채용 공고 필터링 조건
-     * @return 채용 공고 목록
-     */
-    @GetMapping("/job")
-    public ResponseEntity<List<JobPostResponse>> getAll(@RequestParam(value = "search", required = false) String searchQuery) {
-        return ResponseEntity.ok().body(jobPostService.getList(searchQuery));
-    }
-
-    /**
-     * 특정 채용 공고의 세부 정보 조회
-     *
-     * @param id 조회할 채용 공고 Id
-     * @return 채용 공고 세부정보
-     * @throws JobPostNotFoundException 해당 지원 공고가 존재하지 않는 경우(NOT_FOUND)
-     */
-    @GetMapping("/job/{id}")
-    public ResponseEntity<JobPostDetail> getDetail(@PathVariable("id") Long id) {
-        return ResponseEntity.ok().body(jobPostService.getDetail(id));
     }
 
     /**

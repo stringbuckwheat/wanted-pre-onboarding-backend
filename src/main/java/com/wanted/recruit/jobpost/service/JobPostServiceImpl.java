@@ -1,5 +1,6 @@
 package com.wanted.recruit.jobpost.service;
 
+import com.wanted.recruit.common.exception.exception.InvalidSearchQueryException;
 import com.wanted.recruit.company.entity.Company;
 import com.wanted.recruit.common.exception.exception.CompanyNotFoundException;
 import com.wanted.recruit.common.exception.exception.JobPostNotFoundException;
@@ -27,6 +28,57 @@ import java.util.stream.Collectors;
 public class JobPostServiceImpl implements JobPostService {
     private final JobPostRepository jobPostRepository;
     private final CompanyRepository companyRepository;
+
+    // 검색어 검사용 정규표현식
+    // 알파벳, 숫자, 한글, 공백, 하이픈(-), 언더스코어(_), 콤마(,), 슬래시(/), 괄호((), {}, [])만 허용
+    private static final String SAFE_QUERY_PATTERN = "^[a-zA-Z0-9가-힣\\s\\-_,./()\\[\\]{}]*$";
+
+
+    /**
+     * 전체 채용 공고 리스트
+     *
+     * @return 전체 채용 공고 리스트
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<JobPostResponse> getAll() {
+        return jobPostRepository.findAll().stream()
+                .map(JobPostResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 검색된 채용 공고 리스트
+     *
+     * @param searchQuery 검색어
+     * @return 검색된 채용 공고 리스트
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<JobPostResponse> search(String searchQuery) {
+        // 검색어 유효성 검사
+        if (!searchQuery.matches(SAFE_QUERY_PATTERN)) {
+            throw new InvalidSearchQueryException();
+        }
+
+        return jobPostRepository.search(searchQuery);
+    }
+
+    /**
+     * 채용 공고의 세부 정보
+     *
+     * @param id 조회할 채용 공고의 ID
+     * @return 채용 공고의 세부 정보
+     * @throws JobPostNotFoundException 해당 채용 공고가 존재하지 않는 경우
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public JobPostDetail getDetail(Long id) {
+        JobPost jobPost = jobPostRepository.findById(id).orElseThrow(JobPostNotFoundException::new);
+        List<Long> otherJobPost = jobPostRepository.getOtherJobPost(jobPost.getCompany().getId(), jobPost.getId());
+
+        return new JobPostDetail(jobPost, otherJobPost);
+    }
 
     /**
      * 새로운 채용 공고 저장
@@ -72,62 +124,11 @@ public class JobPostServiceImpl implements JobPostService {
     @Override
     @Transactional
     public void delete(Long id) {
-        jobPostRepository.findById(id).orElseThrow(JobPostNotFoundException::new);
-        jobPostRepository.deleteById(id);
-    }
-
-    /**
-     * 검색어가 있으면 검색된 리스트를, 검색어가 없으면 전체 리스트를 반환
-     *
-     * @param searchQuery (Optional) 검색어
-     * @return 검색어를 포함하는 리스트 or 전체 채용 공고 리스트
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<JobPostResponse> getList(String searchQuery) {
-        // 검색어가 있으면
-        if(searchQuery != null && !searchQuery.isEmpty()) {
-            return search(searchQuery);
+        // 해당 엔티티가 존재하는지 확인 후 삭제
+        if (!jobPostRepository.existsById(id)) {
+            throw new JobPostNotFoundException();
         }
 
-        // 검색어 없으면 전체 목록 반환
-        return getAll();
-    }
-
-    /**
-     * 전체 채용 공고 리스트
-     * @return 전체 채용 공고 리스트
-     */
-    @Transactional(readOnly = true)
-    private List<JobPostResponse> getAll() {
-        return jobPostRepository.findAll().stream()
-                .map(JobPostResponse::new)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 검색된 채용 공고 리스트
-     * @param searchQuery 검색어
-     * @return 검색된 채용 공고 리스트
-     */
-    @Transactional(readOnly = true)
-    private List<JobPostResponse> search(String searchQuery) {
-        return jobPostRepository.search(searchQuery);
-    }
-
-    /**
-     * 채용 공고의 세부 정보
-     *
-     * @param id 조회할 채용 공고의 ID
-     * @return 채용 공고의 세부 정보
-     * @throws JobPostNotFoundException 해당 채용 공고가 존재하지 않는 경우
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public JobPostDetail getDetail(Long id) {
-        JobPost jobPost = jobPostRepository.findById(id).orElseThrow(JobPostNotFoundException::new);
-        List<Long> otherJobPost = jobPostRepository.getOtherJobPost(jobPost.getCompany().getId(), jobPost.getId());
-
-        return new JobPostDetail(jobPost, otherJobPost);
+        jobPostRepository.deleteById(id);
     }
 }

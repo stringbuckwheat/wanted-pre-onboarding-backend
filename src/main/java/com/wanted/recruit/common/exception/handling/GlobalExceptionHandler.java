@@ -1,9 +1,6 @@
 package com.wanted.recruit.common.exception.handling;
 
-import com.wanted.recruit.common.exception.exception.AlreadyAppliedException;
-import com.wanted.recruit.common.exception.exception.CompanyNotFoundException;
-import com.wanted.recruit.common.exception.exception.JobPostNotFoundException;
-import com.wanted.recruit.common.exception.exception.UserNotFoundException;
+import com.wanted.recruit.common.exception.exception.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +33,12 @@ public class GlobalExceptionHandler {
         String message = fieldError == null ? "요청 데이터를 확인해주세요" : fieldError.getDefaultMessage();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(title, message));
+    }
+
+    @ExceptionHandler(InvalidSearchQueryException.class)
+    public HttpEntity<ErrorResponse> handleException(InvalidSearchQueryException e) {
+        ErrorResponse er = new ErrorResponse(e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(er);
     }
 
     /**
