@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * {@Link JobPostService} 구현체
+ * {@link JobPostService} 구현체
  */
 @Service
 @RequiredArgsConstructor

@@ -1,6 +1,5 @@
 package com.wanted.recruit.jobpost.controller;
 
-import com.wanted.recruit.jobpost.dto.JobPostRequest;
 import com.wanted.recruit.jobpost.dto.JobPostUpdateRequest;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;

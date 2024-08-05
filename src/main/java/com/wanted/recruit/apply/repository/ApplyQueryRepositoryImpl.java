@@ -7,7 +7,7 @@ import static com.wanted.recruit.apply.entity.QApply.apply;
 
 
 /**
- * {@Link ApplyQueryRepository} 인터페이스 구현체
+ * {@link ApplyQueryRepository} 인터페이스 구현체
  * QueryDSL 사용
  */
 @RequiredArgsConstructor

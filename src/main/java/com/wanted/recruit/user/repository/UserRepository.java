@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@Link User} 엔티티용 Spring Data JPA 리파지토리 인터페이스
+ * {@link User} 엔티티용 Spring Data JPA 리파지토리 인터페이스
  */
 public interface UserRepository extends Repository<User, Long> {
     User save(User user);
